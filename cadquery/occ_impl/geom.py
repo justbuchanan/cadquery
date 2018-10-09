@@ -6,7 +6,7 @@ from OCC.Bnd import Bnd_Box
 from OCC.BRepBndLib import brepbndlib_Add  # brepbndlib_AddOptimal
 from OCC.BRepMesh import BRepMesh_IncrementalMesh
 
-TOL = 1e-2
+TOL = 1e-4
 
 
 class Vector(object):
@@ -28,7 +28,7 @@ class Vector(object):
         elif len(args) == 1:
             if isinstance(args[0], Vector):
                 fV = gp_Vec(args[0].wrapped.XYZ())
-            elif isinstance(args[0], tuple):
+            elif isinstance(args[0], tuple) or isinstance(args[0], list):
                 fV = gp_Vec(*args[0])
             elif isinstance(args[0], gp_Vec):
                 fV = gp_Vec(args[0].XYZ())
@@ -39,7 +39,7 @@ class Vector(object):
             elif isinstance(args[0], gp_XYZ):
                 fV = gp_Vec(args[0])
             else:
-                fV = args[0]
+                raise RuntimeError("Invalid parameter to Vector(): '{}'".format(args[0]))
         elif len(args) == 0:
             fV = gp_Vec(0, 0, 0)
         else:
@@ -132,8 +132,16 @@ class Vector(object):
     def __str__(self):
         return 'Vector: ' + str((self.x, self.y, self.z))
 
+    def approxEq(self, other, rtol = 1e-5):
+        # TODO: default rel_tol for isclose() is 1e-9 - use that?
+        assert(isinstance(other, Vector))
+        return math.isclose(self.x, other.x, rel_tol=rtol) and math.isclose(self.y, other.y, rel_tol=rtol) and math.isclose(self.z, other.z, rel_tol=rtol)
+
     def __eq__(self, other):
-        return self.wrapped == other.wrapped
+        return self.approxEq(other)
+
+    # def __eq__(self, other):
+    #     return self.wrapped == other.wrapped
     '''  
     is not implemented in OCC
     def __ne__(self, other):
@@ -164,11 +172,18 @@ class Matrix:
     """
 
     def __init__(self, matrix=None):
-        
+
         if matrix is None:
             self.wrapped = gp_Trsf()
-        else:
+        elif isinstance(matrix, gp_Trsf):
             self.wrapped = matrix
+        elif isinstance(matrix, list) or isinstance(matrix, tuple):
+            assert(len(matrix) in [12,16])
+            self.wrapped = gp_Trsf()
+            # drop last 4, which should be [0, 0, 0, 1]
+            self.wrapped.SetValues(*matrix[0:12])
+        else:
+            raise TypeError("Invalid matrix: {}".format(matrix))
 
     def rotateX(self, angle):
         
@@ -198,8 +213,95 @@ class Matrix:
         return Matrix(self.wrapped.Inverted())
     
     def multiply(self,other):
-        
-        return Matrix(self.wrapped*other.wrapped)
+        if isinstance(other, Vector):
+            return Vector(other.toPnt().Transformed(self.wrapped))
+        elif isinstance(other, Matrix):
+            return Matrix(self.wrapped.Multiplied(other.wrapped))
+        else:
+            raise TypeError("multiply() accepts a Vector or a Matrix")
+
+    def transposed(self):
+        # TODO: is there a builtin implementation we can rely on?
+        vals = []
+        for c in range(1, 4):
+            for r in range(1, 4):
+                vals.append(r, c)
+            vals.append(0)
+        m = gp_Trsf()
+        m.SetValues(*vals)
+        return Matrix(m)
+
+    def __getitem__(self, rc):
+        assert(len(rc) == 2)
+        return self.wrapped.Value(rc[0], rc[1])
+
+
+    # TODO: are these convenience accessors necessary? FreeCAD.Base.Matrix
+    # provides them and cqparts uses them.
+
+    @property
+    def A11(self):
+        return self[1,1]
+    @property
+    def A12(self):
+        return self[1,2]
+    @property
+    def A13(self):
+        return self[1,3]
+    @property
+    def A14(self):
+        return self[1,4]
+
+    @property
+    def A21(self):
+        return self[2,1]
+    @property
+    def A22(self):
+        return self[2,2]
+    @property
+    def A23(self):
+        return self[2,3]
+    @property
+    def A24(self):
+        return self[2,4]
+
+    @property
+    def A31(self):
+        return self[3,1]
+    @property
+    def A32(self):
+        return self[3,2]
+    @property
+    def A33(self):
+        return self[3,3]
+    @property
+    def A34(self):
+        return self[3,4]
+
+    @property
+    def A41(self):
+        return 0
+    @property
+    def A42(self):
+        return 0
+    @property
+    def A43(self):
+        return 0
+    @property
+    def A44(self):
+        return 1
+
+    def _all_values(self):
+        def _itr():
+            for r in range(1, 4):
+                for c in range(1, 5):
+                    yield self[r, c]
+        return list(_itr())
+
+    def __str__(self):
+        # TODO: do better
+        return ', '.join([str(f) for f in self._all_values()])
+
 
 class Plane(object):
     """A 2D coordinate system in space
@@ -420,7 +522,7 @@ class Plane(object):
               test.
         """
 
-        pass
+        raise NotImplementedError()
 
         '''
         # TODO: also use a set of points along the wire to test as well.
@@ -528,7 +630,7 @@ class Plane(object):
 
         # TODO why is it here?
 
-        raise NotImplementedError
+        raise NotImplementedError()
 
         '''
         resultWires = []
@@ -599,25 +701,51 @@ class Plane(object):
         # ok i will be really honest, i cannot understand exactly why this works
         # something bout the order of the translation and the rotation.
         # the double-inverting is strange, and I don't understand it.
-        forward = Matrix()
-        inverse = Matrix()
+        # forward = Matrix()
+        # inverse = Matrix()
 
-        global_coord_system = gp_Ax3()
-        local_coord_system = gp_Ax3(gp_Pnt(*self.origin.toTuple()),
-                                    gp_Dir(*self.zDir.toTuple()),
-                                    gp_Dir(*self.xDir.toTuple())
-                                    )
+        # global_coord_system = gp_Ax3()
+        # local_coord_system = gp_Ax3(gp_Pnt(*self.origin.toTuple()),
+        #                             gp_Dir(*self.zDir.toTuple()),
+        #                             gp_Dir(*self.xDir.toTuple())
+        #                             )
 
-        forward.wrapped.SetTransformation(global_coord_system,
-                                          local_coord_system)
+        # forward.wrapped.SetTransformation(global_coord_system,
+                                          # local_coord_system)
 
-        inverse.wrapped.SetTransformation(local_coord_system,
-                                          global_coord_system)
+        # inverse.wrapped.SetTransformation(local_coord_system,
+                                          # global_coord_system)
+        r = Matrix()
+        r.wrapped.SetValues(
+            self.xDir.x, self.xDir.y, self.xDir.z, 0,
+            self.yDir.x, self.yDir.y, self.yDir.z, 0,
+            self.zDir.x, self.zDir.y, self.zDir.z, 0,
+            )
+
+
+        invR = r.inverse()
+
+        vals = []
+        for row in range(1,4):
+            for col in range(1,5):
+                vals.append(invR[row,col])
+        # print("at _calcTransforms, vals = {}".format(vals))
+        assert(len(vals) == 12)
+
+        vals[3] = self.origin.x
+        vals[7] = self.origin.y
+        vals[11] = self.origin.z
+        invR.wrapped.SetValues(*vals)
+
+        self.rG = invR
+        self.fG = invR.inverse()
+
+        # invR.A14 = self.origin.x
 
         # TODO verify if this is OK
-        self.lcs = local_coord_system
-        self.rG = inverse
-        self.fG = forward
+        # self.lcs = local_coord_system
+        # self.rG = inverse
+        # self.fG = forward
 
 
 class BoundBox(object):
@@ -637,9 +765,9 @@ class BoundBox(object):
         self.zmax = ZMax
         self.zlen = ZMax - ZMin
 
-        self.center = Vector((XMax + XMin) / 2,
-                             (YMax + YMin) / 2,
-                             (ZMax + ZMin) / 2)
+        self.center = Vector((XMax + XMin) / 2.0,
+                             (YMax + YMin) / 2.0,
+                             (ZMax + ZMin) / 2.0)
 
         self.DiagonalLength = self.wrapped.SquareExtent()**0.5
 
@@ -665,6 +793,8 @@ class BoundBox(object):
             tmp.Update(*obj.toTuple())
         elif isinstance(obj, BoundBox):
             tmp.Add(obj.wrapped)
+        else:
+            raise TypeError("Unknown obj type: {}".format(ob))
 
         return BoundBox(tmp)
 

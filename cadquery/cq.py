@@ -1321,7 +1321,7 @@ class Workplane(CQ):
         provided matrix, and then attempts to consolidate them into a single wire.
 
         :param matrix: a 4xr transformation matrix, in global coordinates
-        :type matrix: a FreeCAD Base.Matrix object
+        :type matrix: a cadquery.Matrix object
         :return: a CadQuery object  with consolidated wires, and any originals on the stack.
 
         The most common use case is to create a set of open edges, and then mirror them

@@ -2,7 +2,7 @@
 import sys
 import unittest
 from tests import BaseTest
-from OCC.gp import gp_Vec, gp_Pnt, gp_Ax2, gp_Circ, gp_DZ
+from OCC.gp import gp_Vec, gp_Pnt, gp_Ax2, gp_Circ, gp_DZ, gp_Trsf
 from OCC.BRepBuilderAPI import (BRepBuilderAPI_MakeVertex,
                                 BRepBuilderAPI_MakeEdge,
                                 BRepBuilderAPI_MakeFace)
@@ -107,6 +107,20 @@ class TestCadObjects(BaseTest):
     def testVectorAdd(self):
         result = Vector(1, 2, 0) + Vector(0, 0, 3)
         self.assertTupleAlmostEquals((1.0, 2.0, 3.0), result.toTuple(), 3)
+
+    def testMatrixVectorMultiply(self):
+        # m = Matrix([[1,1,1], [1,1,1], [1,1,1]])
+        # m = Matrix(
+        #     -0.146655,-0.271161,-0.951296,0.0376659,
+        #     -0.676234,0.729359,-0.103649,0.615421,
+        #     0.721942,0.628098,-0.290333,-0.451955,
+        #     0,0,0,1
+        # )
+        m = Matrix()
+        v = Vector(0,0,1)
+        result = m.multiply(v)
+        self.assertTupleAlmostEquals((0,0,1), result.toTuple(), 3)
+        self.assertTrue(isinstance(result.wrapped, gp_Vec))
 
     def testTranslate(self):
         e = Edge.makeCircle(2, (1, 2, 3))

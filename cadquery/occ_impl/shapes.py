@@ -167,7 +167,7 @@ def downcast(topods_obj):
 class Shape(object):
     """
         Represents a shape in the system.
-        Wrappers the FreeCAD api
+        Wrappers the PythonOCC api
     """
 
     def __init__(self, obj):
@@ -342,6 +342,10 @@ class Shape(object):
                                    Properties)
 
         return Vector(Properties.CentreOfMass())
+
+    def Volume(self):
+        # when density == 1, mass == volume
+        return Shape.computeMass(self)
 
     def Center(self):
         '''
