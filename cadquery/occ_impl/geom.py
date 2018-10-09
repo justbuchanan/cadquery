@@ -701,51 +701,24 @@ class Plane(object):
         # ok i will be really honest, i cannot understand exactly why this works
         # something bout the order of the translation and the rotation.
         # the double-inverting is strange, and I don't understand it.
-        # forward = Matrix()
-        # inverse = Matrix()
+        forward = Matrix()
+        inverse = Matrix()
 
-        # global_coord_system = gp_Ax3()
-        # local_coord_system = gp_Ax3(gp_Pnt(*self.origin.toTuple()),
-        #                             gp_Dir(*self.zDir.toTuple()),
-        #                             gp_Dir(*self.xDir.toTuple())
-        #                             )
+        global_coord_system = gp_Ax3()
+        local_coord_system = gp_Ax3(gp_Pnt(*self.origin.toTuple()),
+                                    gp_Dir(*self.zDir.toTuple()),
+                                    gp_Dir(*self.xDir.toTuple())
+                                    )
 
-        # forward.wrapped.SetTransformation(global_coord_system,
-                                          # local_coord_system)
+        forward.wrapped.SetTransformation(global_coord_system,
+                                          local_coord_system)
 
-        # inverse.wrapped.SetTransformation(local_coord_system,
-                                          # global_coord_system)
-        r = Matrix()
-        r.wrapped.SetValues(
-            self.xDir.x, self.xDir.y, self.xDir.z, 0,
-            self.yDir.x, self.yDir.y, self.yDir.z, 0,
-            self.zDir.x, self.zDir.y, self.zDir.z, 0,
-            )
-
-
-        invR = r.inverse()
-
-        vals = []
-        for row in range(1,4):
-            for col in range(1,5):
-                vals.append(invR[row,col])
-        # print("at _calcTransforms, vals = {}".format(vals))
-        assert(len(vals) == 12)
-
-        vals[3] = self.origin.x
-        vals[7] = self.origin.y
-        vals[11] = self.origin.z
-        invR.wrapped.SetValues(*vals)
-
-        self.rG = invR
-        self.fG = invR.inverse()
-
-        # invR.A14 = self.origin.x
+        inverse.wrapped.SetTransformation(local_coord_system,
+                                          global_coord_system)
 
         # TODO verify if this is OK
-        # self.lcs = local_coord_system
-        # self.rG = inverse
-        # self.fG = forward
+        self.rG = inverse
+        self.fG = forward
 
 
 class BoundBox(object):
