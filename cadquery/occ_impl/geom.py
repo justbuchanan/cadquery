@@ -140,6 +140,9 @@ class Vector(object):
         return self.wrapped.__ne__(other)
     '''
 
+    def approxEq(self, other):
+        return self == other
+
     def toPnt(self):
 
         return gp_Pnt(self.wrapped.XYZ())
