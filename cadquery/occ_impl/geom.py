@@ -141,6 +141,9 @@ class Vector(object):
     def __neg__(self):
         return self * -1
 
+    def __abs__(self):
+        return self.Length
+
     def __repr__(self):
         return 'Vector: ' + str((self.x, self.y, self.z))
 
