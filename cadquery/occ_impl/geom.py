@@ -96,6 +96,9 @@ class Vector(object):
     def __mul__(self, scale):
         return self.multiply(scale)
 
+    def __truediv__(self, denom):
+        return self.multiply(1.0 / denom)
+
     def normalized(self):
         """Return a normalized version of this vector"""
         return Vector(self.wrapped.Normalized())
@@ -134,6 +137,9 @@ class Vector(object):
 
     def __sub__(self, v):
         return self.sub(v)
+
+    def __neg__(self):
+        return self * -1
 
     def __repr__(self):
         return 'Vector: ' + str((self.x, self.y, self.z))
