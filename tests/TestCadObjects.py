@@ -121,6 +121,8 @@ class TestCadObjects(BaseTest):
         result = Vector(2, 4, 6) / 2
         self.assertEqual(Vector(1, 2, 3), result)
 
+        self.assertEqual(Vector(-1, -1, -1), -Vector(1, 1, 1))
+
     def testVectorEquals(self):
         a = Vector(1, 2, 3)
         b = Vector(1, 2, 3)
