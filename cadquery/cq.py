@@ -2223,6 +2223,43 @@ class Workplane(CQ):
 
         return self.newObject([newS])
 
+    def intersect(self, toIntersect, combine=True, clean=True):
+        """
+        Intersects the provided solid from the current solid.
+
+        if combine=True, the result and the original are updated to point to the new object
+        if combine=False, the result will be on the stack, but the original is unmodified
+
+        :param toIntersect: object to intersect
+        :type toIntersect: a solid object, or a CQ object having a solid,
+        :param boolean clean: call :py:meth:`clean` afterwards to have a clean shape
+        :raises: ValueError if there is no solid to intersect with in the chain
+        :return: a CQ object with the resulting object selected
+        """
+
+        # look for parents to intersect with
+        solidRef = self.findSolid(searchStack=True, searchParents=True)
+
+        if solidRef is None:
+            raise ValueError("Cannot find solid to intersect with")
+        solidToIntersect = None
+
+        if isinstance(toIntersect, CQ):
+            solidToIntersect = toIntersect.val()
+        elif isinstance(toIntersect, Solid):
+            solidToIntersect = toIntersect
+        else:
+            raise ValueError("Cannot intersect type '{}'".format(type(toIntersect)))
+
+        newS = solidRef.intersect(solidToIntersect)
+
+        if clean: newS = newS.clean()
+
+        if combine:
+            solidRef.wrapped = newS.wrapped
+
+        return self.newObject([newS])
+
     def cutBlind(self, distanceToCut, clean=True):
         """
         Use all un-extruded wires in the parent chain to create a prismatic cut from existing solid.
