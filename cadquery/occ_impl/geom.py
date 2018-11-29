@@ -214,6 +214,19 @@ class Matrix:
         
         return [data[j][i] for i in range(4) for j in range(4)]
 
+    def __getitem__(self, rc):
+        if len(rc) != 2:
+            raise IndexError("Array subscript must provide (row, column)")
+        r, c= rc[0], rc[1]
+        if r >= 0 and r < 4 and c >= 0 and c < 4:
+            if r < 3:
+                return self.wrapped.Value(r+1,c+1)
+            else:
+                return [0, 0, 0, 1][c]
+        else:
+            raise IndexError("Matrix is 4x4")
+
+
 class Plane(object):
     """A 2D coordinate system in space
 
