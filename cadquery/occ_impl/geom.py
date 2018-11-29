@@ -167,8 +167,19 @@ class Matrix:
 
         if matrix is None:
             self.wrapped = gp_Trsf()
-        else:
+        elif isinstance(matrix, gp_Trsf):
             self.wrapped = matrix
+        elif isinstance(matrix, list):
+            self.wrapped = gp_Trsf()
+            if len(matrix) == 12:
+                self.wrapped.SetValues(*matrix)
+            elif len(matrix) == 16:
+                # TODO: check that last 4 are [0, 0, 0, 1]
+                self.wrapped.SetValues(*matrix[0:12])
+            else:
+                raise TypeError("Matrix constructor requires list of length 12 or 16")
+        else:
+            raise TypeError("Invalid matrix initialization: {}".format(matrix))
 
     def rotateX(self, angle):
 
