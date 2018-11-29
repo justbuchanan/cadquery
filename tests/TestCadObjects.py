@@ -134,6 +134,10 @@ class TestCadObjects(BaseTest):
         self.assertEqual(a, b)
         self.assertEqual(a, c)
 
+    def testMatrixAccessors(self):
+        m = Matrix()
+        vals = [m[r,c] for r in range(4) for c in range(4)]
+
     def testTranslate(self):
         e = Edge.makeCircle(2, (1, 2, 3))
         e2 = e.translate(Vector(0, 0, 1))
