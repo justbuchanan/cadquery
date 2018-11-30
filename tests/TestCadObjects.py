@@ -123,12 +123,20 @@ class TestCadObjects(BaseTest):
 
         self.assertEqual(Vector(-1, -1, -1), -Vector(1, 1, 1))
 
+        self.assertEqual(0, abs(Vector(0, 0, 0)))
+        self.assertEqual(1, abs(Vector(1, 0, 0)))
+        self.assertEqual((1+4+9)**0.5, abs(Vector(1, 2, 3)))
+
     def testVectorEquals(self):
         a = Vector(1, 2, 3)
         b = Vector(1, 2, 3)
         c = Vector(1, 2, 3.000001)
         self.assertEqual(a, b)
         self.assertEqual(a, c)
+
+    def testMatrixAccessors(self):
+        m = Matrix()
+        vals = [m[r,c] for r in range(4) for c in range(4)]
 
     def testTranslate(self):
         e = Edge.makeCircle(2, (1, 2, 3))
@@ -140,6 +148,51 @@ class TestCadObjects(BaseTest):
         e = Shape.cast(BRepBuilderAPI_MakeEdge(gp_Pnt(0, 0, 0),
                                                gp_Pnt(1, 1, 0)).Edge())
         self.assertEqual(2, len(e.Vertices()))
+
+    def testPlaneEqual(self):
+        # default orientation
+        self.assertEqual(
+            Plane(origin=(0,0,0), xDir=(1,0,0), normal=(0,0,1)),
+            Plane(origin=(0,0,0), xDir=(1,0,0), normal=(0,0,1))
+        )
+        # moved origin
+        self.assertEqual(
+            Plane(origin=(2,1,-1), xDir=(1,0,0), normal=(0,0,1)),
+            Plane(origin=(2,1,-1), xDir=(1,0,0), normal=(0,0,1))
+        )
+        # moved x-axis
+        self.assertEqual(
+            Plane(origin=(0,0,0), xDir=(1,1,0), normal=(0,0,1)),
+            Plane(origin=(0,0,0), xDir=(1,1,0), normal=(0,0,1))
+        )
+        # moved z-axis
+        self.assertEqual(
+            Plane(origin=(0,0,0), xDir=(1,0,0), normal=(0,1,1)),
+            Plane(origin=(0,0,0), xDir=(1,0,0), normal=(0,1,1))
+        )
+
+    def testPlaneNotEqual(self):
+        # type difference
+        for value in [None, 0, 1, 'abc']:
+            self.assertNotEqual(
+                Plane(origin=(0,0,0), xDir=(1,0,0), normal=(0,0,1)),
+                value
+            )
+        # origin difference
+        self.assertNotEqual(
+            Plane(origin=(0,0,0), xDir=(1,0,0), normal=(0,0,1)),
+            Plane(origin=(0,0,1), xDir=(1,0,0), normal=(0,0,1))
+        )
+        # x-axis difference
+        self.assertNotEqual(
+            Plane(origin=(0,0,0), xDir=(1,0,0), normal=(0,0,1)),
+            Plane(origin=(0,0,0), xDir=(1,1,0), normal=(0,0,1))
+        )
+        # z-axis difference
+        self.assertNotEqual(
+            Plane(origin=(0,0,0), xDir=(1,0,0), normal=(0,0,1)),
+            Plane(origin=(0,0,0), xDir=(1,0,0), normal=(0,1,1))
+        )
 
 
 if __name__ == '__main__':
