@@ -174,12 +174,15 @@ class Matrix:
             if len(matrix) == 12:
                 self.wrapped.SetValues(*matrix)
             elif len(matrix) == 16:
-                # TODO: check that last 4 are [0, 0, 0, 1]
+                # Only use the first 12 values - the last 4 are assumed to be
+                # [0, 0, 0, 1].
+                # TODO: check that the last 4 are what we expect?
                 self.wrapped.SetValues(*matrix[0:12])
             else:
                 raise TypeError("Matrix constructor requires list of length 12 or 16")
         else:
-            raise TypeError("Invalid matrix initialization: {}".format(matrix))
+            raise TypeError(
+                    "Invalid param to matrix constructor: {!r}".format(matrix))
 
     def rotateX(self, angle):
 
@@ -227,7 +230,7 @@ class Matrix:
 
     def __getitem__(self, rc):
         if len(rc) != 2:
-            raise IndexError("Array subscript must provide (row, column)")
+            raise IndexError("Matrix subscript must provide (row, column)")
         r, c= rc[0], rc[1]
         if r >= 0 and r < 4 and c >= 0 and c < 4:
             if r < 3:

@@ -115,9 +115,23 @@ class TestCadObjects(BaseTest):
         self.assertEqual(a, b)
         self.assertEqual(a, c)
 
-    def testMatrixAccessors(self):
+    def testMatrixCreationAndAccess(self):
+        # default constructor creates a 4x4 identity matrix
         m = Matrix()
         vals = [m[r,c] for r in range(4) for c in range(4)]
+        identity = [1., 0., 0., 0.,
+                    0., 1., 0., 0.,
+                    0., 0., 1., 0.,
+                    0., 0., 0., 1.]
+        self.assertEqual(identity, vals)
+
+        vals4x4 = [2., 0., 0., 0.,
+                   0., 2., 0., 0.,
+                   9., 0., 2., 0.,
+                   0., 0., 0., 1.]
+        m = Matrix(vals4x4)
+        vals = [m[r,c] for r in range(4) for c in range(4)]
+        self.assertEqual(vals4x4, vals)
 
     def testTranslate(self):
         e = Edge.makeCircle(2, (1, 2, 3))
